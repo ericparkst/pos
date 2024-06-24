@@ -1,0 +1,51 @@
+﻿@model IEnumerable<Category>
+
+<style>
+    .card-img-top {
+        height: 200px; /* 원하는 높이 설정 */
+        width: 100%; /* 너비를 100%로 설정 */
+        object-fit: contain; /* 이미지를 컨테이너에 맞추어 잘 맞게 */
+    }
+</style>
+
+<div class="row pb-3">
+    @foreach (var item in Model)
+    {
+        <div class="col-lg-3 col-sm-6">
+            <div class="row p-2">
+                <div class="col-12 p-1">
+                    <div class="card border-0 p-3 shadow  border-top border-5 rounded">
+                        <img src="@item." class="card-img-top rounded" />
+                        <div class="card-body pb-0">
+                            <div class="pl-1">
+                                <p class="card-title h5 text-dark opacity-75 text-uppercase text-center">@item.NameKO</p>
+                                <p class="card-title text-warning text-center"><b>@item.NameEN</b></p>
+                            </div>
+                            <div class="pl-1">
+                                <p class="text-dark opacity-75 text-center">
+                                    <span>Category Code: @item.CategoryCode</span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6">
+                                <a asp-action="Details"
+                                   asp-route-itemId="@item.Id"
+                                   class="btn btn-primary bg-gradient border-0 form-control">
+                                    Details
+                                </a>
+                            </div>
+                            <div class="col-6">
+                                <a asp-action="CategoryItems"
+                                   asp-route-categoryCode="@item.CategoryCode"
+                                   class="btn btn-primary bg-gradient border-0 form-control">
+                                    Items
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
