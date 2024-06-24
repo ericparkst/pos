@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.DotNet.Scaffolding.Shared.Messaging;
 using Pos.DataAccess.Data;
 using Pos.DataAccess.Repository.IRepository;
 using Pos.Models;
@@ -54,7 +55,6 @@ namespace Pos_backend.Areas.Admin.Controllers
             if (ModelState.IsValid)
             {
                 string wwwRootPath = _webHostEnvironment.WebRootPath;
-
                 if(file != null)
                 {
                     string fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
@@ -68,16 +68,15 @@ namespace Pos_backend.Areas.Admin.Controllers
                         if(System.IO.File.Exists(oldImagePath))
                         {
                             System.IO.File.Delete(oldImagePath);
-                        }
-
-                        using(var fileStream = new FileStream(Path.Combine(departmentPath, fileName), FileMode.Create))
-                        {
-                            file.CopyTo(fileStream);
-                        }
-                        departmentVM.Department.ImageUrl = @"\images\department" + fileName;
+                        }       
                     }
-                }
 
+                    using (var fileStream = new FileStream(Path.Combine(departmentPath, fileName), FileMode.Create))
+                    {
+                        file.CopyTo(fileStream);
+                    }
+                    departmentVM.Department.ImageUrl = @"\images\department" + fileName;
+                }
 
                 if (departmentVM.Department.Id == 0)
                 {
@@ -99,109 +98,6 @@ namespace Pos_backend.Areas.Admin.Controllers
             }
         }
 
-        //public IActionResult Create()
-        //{
-        //    return View();
-        //}
-
-        //[HttpPost]
-        //public IActionResult Create(Department obj, IFormFile? file)
-        //{
-           
-        //    if (ModelState.IsValid)
-        //    {
-        //        string wwwRootPath = _webHostEnvironment.WebRootPath;
-        //        if (file != null)
-        //        {
-        //            string fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
-        //            string productPath = Path.Combine(wwwRootPath, @"images\department");
-
-        //            // file is not null then updating the image with new
-        //            if (!string.IsNullOrEmpty(obj.ImageUrl))
-        //            {
-        //                // delete the old image
-        //                var oldImagePath = Path.Combine(wwwRootPath, obj.ImageUrl.TrimStart('\\'));
-
-        //                if (System.IO.File.Exists(oldImagePath))
-        //                {
-        //                    System.IO.File.Delete(oldImagePath);
-        //                }
-        //            }
-
-        //            using (var fileStream = new FileStream(Path.Combine(productPath, fileName), FileMode.Create))
-        //            {
-        //                file.CopyTo(fileStream);
-        //            }
-        //            obj.ImageUrl = @"\images\department\" + fileName;
-        //        }
-
-        //        _unitOfWork.Department.Add(obj);
-        //        _unitOfWork.Save();
-        //        TempData["success"] = "Department created successfully";
-        //        return RedirectToAction("Index");
-        //    }
-        //    return View();
-        //}
-
-        //public IActionResult Edit(int? id)
-        //{
-        //    if (id == null || id == 0)
-        //    {
-        //        return NotFound();
-        //    }
-        //    Department? departmentFromDb = _unitOfWork.Department.Get(u => u.Id == id);
-
-        //    if (departmentFromDb == null)
-        //    {
-        //        return NotFound();
-        //    }
-        //    return View(departmentFromDb);
-        //}
-
-        //[HttpPost]
-        //public IActionResult Edit(Department obj)
-        //{
-        //    if (ModelState.IsValid)
-        //    {
-        //        _unitOfWork.Department.Update(obj);
-        //        _unitOfWork.Save();
-        //        TempData["success"] = "Department edited successfully";
-        //        return RedirectToAction("Index");
-        //    }
-        //    return View();
-        //}
-
-        //public IActionResult Delete(int? id)
-        //{
-        //    if (id == null || id == 0)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    Department? departmentFromDb = _unitOfWork.Department.Get(u => u.Id == id);
-
-        //    if (departmentFromDb == null)
-        //    {
-        //        return NotFound();
-        //    }
-        //    return View(departmentFromDb);
-        //}
-
-        //[HttpPost, ActionName("Delete")]
-        //public IActionResult DeletePOST(int? id)
-        //{
-        //    Department? obj = _unitOfWork.Department.Get(u => u.Id == id); ;
-        //    if (obj == null)
-        //    {
-        //        return NotFound(id);
-        //    }
-
-        //    _unitOfWork.Department.Remove(obj);
-        //    _unitOfWork.Save();
-        //    TempData["success"] = "Department deleted successfully";
-        //    return RedirectToAction("Index");
-        //}
-
         // should seprate into own folder and under api module
         #region API CALLS
         [HttpGet]
@@ -209,6 +105,31 @@ namespace Pos_backend.Areas.Admin.Controllers
         {
             List<Department> objDepartmentList = _unitOfWork.Department.GetAll().ToList();
             return Json(new {data =  objDepartmentList});
+        }
+
+        [HttpDelete]
+        public IActionResult Delete(int? id)
+        {
+            var departmentToBeDelted = _unitOfWork.Department.Get(u => u.Id == id);
+
+            // guard clause
+            if(departmentToBeDelted == null)
+            {
+                return Json(new { success = false, Message = "Eroor while deleting" });
+            }
+            var oldImagePath =
+                Path.Combine(_webHostEnvironment.WebRootPath,
+                departmentToBeDelted.ImageUrl.TrimStart('\\'));
+
+            // delete image from folder
+            if (System.IO.File.Exists(oldImagePath))
+            {
+                System.IO.File.Delete(oldImagePath);
+            }
+
+            _unitOfWork.Department.Remove(departmentToBeDelted);
+            _unitOfWork.Save();
+            return Json(new { success = true, Message = "Delete Sucessful" });
         }
         #endregion
     }
