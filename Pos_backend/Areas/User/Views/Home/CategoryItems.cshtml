@@ -16,7 +16,7 @@
             <div class="row p-2">
                 <div class="col-12 p-1">
                     <div class="card border-0 p-3 shadow  border-top border-5 rounded">
-                        <img src="@item." class="card-img-top rounded" />
+                        <img src="@item.ImageUrl" class="card-img-top rounded" />
                         <div class="card-body pb-0">
                             <div class="pl-1">
                                 <p class="card-title h5 text-dark opacity-75 text-uppercase text-center">@item.NameKO</p>
@@ -36,13 +36,13 @@
                                     Details
                                 </a>
                             </div>
-                            <div class="col-6">
+                            @* <div class="col-6">
                                 <a asp-action="CategoryItems"
                                    asp-route-categoryCode="@item.CategoryCode"
                                    class="btn btn-primary bg-gradient border-0 form-control">
                                     Items
                                 </a>
-                            </div>
+                            </div> *@
                         </div>
                     </div>
                 </div>

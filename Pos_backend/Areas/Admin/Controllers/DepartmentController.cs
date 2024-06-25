@@ -75,7 +75,7 @@ namespace Pos_backend.Areas.Admin.Controllers
                     {
                         file.CopyTo(fileStream);
                     }
-                    departmentVM.Department.ImageUrl = @"\images\department" + fileName;
+                    departmentVM.Department.ImageUrl = @"\images\department\" + fileName;
                 }
 
                 if (departmentVM.Department.Id == 0)

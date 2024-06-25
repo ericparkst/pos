@@ -1,0 +1,98 @@
+﻿@model CategoryVM
+
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">@(Model.Category.Id != 0 ? "Update" : "Create") Department</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <form method="post" class="row" enctype="multipart/form-data">
+            <input asp-for="Category.Id" hidden />
+            <input asp-for="Category.ImageUrl" hidden />
+            <div class="row">
+                <div class="col-10">
+                    <div class="border p-3">
+
+                        <div class="form-floating py-2 col-12">
+                            <input type="text" asp-for="Category.DeptCode" class="form-control border-0 shadow" />
+                            <label asp-for="Category.DeptCode" class="ms-2"></label>
+                            <span asp-validation-for="Category.DeptCode" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-floating py-2 col-12">
+                            <input type="text" asp-for="Category.CategoryCode" class="form-control border-0 shadow" />
+                            <label asp-for="Category.CategoryCode" class="ms-2"></label>
+                            <span asp-validation-for="Category.CategoryCode" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-floating py-2 col-12">
+                            <input type="text" asp-for="Category.NameEN" class="form-control border-0 shadow" />
+                            <label asp-for="Category.NameEN" class="ms-2"></label>
+                            <span asp-validation-for="Category.NameEN" class="text-danger"></span>
+                        </div>
+                        <div class="form-floating py-2 col-12">
+                            <input type="text" asp-for="Category.NameKO" class="form-control border-0 shadow" />
+                            <label asp-for="Category.NameKO" class="ms-2"></label>
+                            <span asp-validation-for="Category.NameKO" class="text-danger"></span>
+                        </div>
+
+                        <div class="py-2 col-12">
+                            <label asp-for="Category.Description" class="ms-2 text-muted"></label>
+                            <textarea asp-for="Category.Description" class="form-control border-0 shadow"></textarea>
+                        </div>
+
+                        <div class="form-floating py-2 col-12">
+                            <input type="file" name="file" asp-for="Category.ImageUrl" class="form-control border-0 shadow" />
+                            <label asp-for="Category.ImageUrl" class="ms-2"></label>
+                        </div>
+
+                        <div class="row pt-2">
+                            <div class="col-6">
+                                @if (Model.Category.Id != 0)
+                                {
+                                    <button type="submit" class="btn btn-primary form-control">Update</button>
+                                }
+                                else
+                                {
+                                    <button type="submit" class="btn btn-primary form-control">Create</button>
+                                }
+
+                            </div>
+                            <div class="col-6">
+                                <a asp-controller="Department" asp-action="index" class="btn btn-secondary form-control">Back to List</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-2">
+                    <img src="@Model.Category.ImageUrl" width="100%" style="border-radius:5px; border: 1px solid #bbb9b9" />
+                </div>
+            </div>
+
+
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        tinymce.init({
+            selector: 'textarea',
+            plugins: 'anchor autolink charmap codesample emoticons lists table visualblocks wordcount checklist mediaembed casechange export formatpainter pageembed linkchecker a11ychecker tinymcespellchecker permanentpen powerpaste advtable advcode editimage advtemplate ai mentions tinycomments tableofcontents footnotes mergetags autocorrect typography inlinecss markdown',
+            toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | addcomment showcomments | spellcheckdialog a11ycheck typography | align lineheight | checklist numlist bullist indent outdent ',
+            tinycomments_mode: 'embedded',
+            tinycomments_author: 'Author name',
+            mergetags_list: [
+                { value: 'First.Name', title: 'First Name' },
+                { value: 'Email', title: 'Email' },
+            ],
+            ai_request: (request, respondWith) => respondWith.string(() => Promise.reject("See docs to implement AI Assistant")),
+        });
+    </script>
+    @{
+        <partial name="_ValidationScriptsPartial" />
+    }
+}

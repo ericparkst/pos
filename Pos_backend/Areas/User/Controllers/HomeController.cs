@@ -49,24 +49,41 @@ namespace Pos_backend.Areas.Customer.Controllers
             return View(departmentList);
         }
         
-        public IActionResult DeptCategories(string deptCode)
+        public IActionResult DeptCategories(string? deptCode)
         {
+            
             var allCategories = _unitOfWork.Category.GetAll().ToList();
-            IEnumerable<Category> categoryList = allCategories.Where(i => i.DeptCode.Trim().ToLower() == deptCode.Trim().ToLower()).ToList();
+            IEnumerable<Category> categoryList;
 
-            if (categoryList == null || !categoryList.Any())
+            
+            if(deptCode == null)
             {
-                return NotFound("No categories found for the given DeptCode."); // send error message to view
+                return View(allCategories);
+            }
+            else
+            {
+                categoryList = allCategories.Where(i => i.DeptCode.Trim().ToLower() == deptCode.Trim().ToLower()).ToList();
+
+                if (categoryList == null || !categoryList.Any())
+                {
+                    return NotFound("No categories found for the given DeptCode."); // send error message to view
+                }
             }
 
             return View(categoryList);
         }
 
-        public IActionResult CategoryItems(string categoryCode)
+        public IActionResult CategoryItems(string? categoryCode)
         {
             var allItems = _unitOfWork.Item.GetAll().ToList();
-            IEnumerable<Item> itemList = allItems.Where(i => i.CategoryCode.Trim().Equals(categoryCode.Trim(), StringComparison.CurrentCultureIgnoreCase)).ToList();
+            IEnumerable<Item> itemList;
 
+            if (categoryCode == null)
+            {
+                return View(allItems);
+            }
+
+            itemList = allItems.Where(i => i.CategoryCode.Trim().Equals(categoryCode.Trim(), StringComparison.CurrentCultureIgnoreCase)).ToList();
             return View(itemList);
         }
 

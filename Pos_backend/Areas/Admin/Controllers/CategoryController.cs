@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
 using Pos.DataAccess.Data;
 using Pos.DataAccess.Repository;
 using Pos.DataAccess.Repository.IRepository;
 using Pos.Models;
+using Pos.Models.ViewModels;
 
 namespace Pos_backend.Areas.Admin.Controllers
 {
@@ -10,9 +12,11 @@ namespace Pos_backend.Areas.Admin.Controllers
     public class CategoryController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
-        public CategoryController(IUnitOfWork unitOfWork)
+        private readonly IWebHostEnvironment _webHostEnvironment;
+        public CategoryController(IUnitOfWork unitOfWork, IWebHostEnvironment webHostEnvironment)
         {
             _unitOfWork = unitOfWork;
+            _webHostEnvironment = webHostEnvironment;
         }
         public IActionResult Index()
         {
@@ -20,82 +24,113 @@ namespace Pos_backend.Areas.Admin.Controllers
             return View(objCategoryList);
         }
 
-        public IActionResult Create()
+        public IActionResult Upsert(int? id)
         {
-            return View();
-        }
-
-        [HttpPost]
-        public IActionResult Create(Category obj)
-        {
-            if (ModelState.IsValid)
+            CategoryVM categoryVM = new()
             {
-                _unitOfWork.Category.Add(obj);
-                _unitOfWork.Save();
-                TempData["success"] = "Category created successfully";
-                return RedirectToAction("Index");
-            }
-            return View();
-        }
+                Category = new Category()
+                {
+                    CategoryCode = string.Empty,
+                    DeptCode = string.Empty,
+                    NameEN = string.Empty,
+                    NameKO = string.Empty
+                }
+            };
 
-        public IActionResult Edit(int? id)
-        {
             if (id == null || id == 0)
             {
-                return NotFound();
+                return View(categoryVM);
             }
-            Category? categoryFromDb = _unitOfWork.Category.Get(u => u.Id == id);
-            //Category? categoryFromDb3 = _db.Categories.Where(u => u.Id == id).FirstOrDefault();
-
-            if (categoryFromDb == null)
+            else
             {
-                return NotFound();
+                categoryVM.Category = _unitOfWork.Category.Get(u => u.Id == id);
+                return View(categoryVM);
             }
-            return View(categoryFromDb);
         }
 
         [HttpPost]
-        public IActionResult Edit(Category obj)
+        public IActionResult Upsert(CategoryVM categoryVM, IFormFile? file)
         {
             if (ModelState.IsValid)
             {
-                _unitOfWork.Category.Update(obj);
+                string wwwRootPath = _webHostEnvironment.WebRootPath;
+                if (file != null)
+                {
+                    string fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+                    string categoryPath = Path.Combine(wwwRootPath, @"images\category");
+
+                    // file is not null then updating the image with new
+                    if (!string.IsNullOrEmpty(categoryVM.Category.ImageUrl))
+                    {
+                        var oldImagePath = Path.Combine(wwwRootPath, categoryVM.Category.ImageUrl.TrimStart('\\'));
+
+                        if (System.IO.File.Exists(oldImagePath))
+                        {
+                            System.IO.File.Delete(oldImagePath);
+                        }
+                    }
+
+                    using (var fileStream = new FileStream(Path.Combine(categoryPath, fileName), FileMode.Create))
+                    {
+                        file.CopyTo(fileStream);
+                    }
+                    categoryVM.Category.ImageUrl = @"\images\category\" + fileName;
+                }
+
+                if (categoryVM.Category.Id == 0)
+                {
+                    _unitOfWork.Category.Add(categoryVM.Category);
+                }
+                else
+                {
+                    _unitOfWork.Category.Update(categoryVM.Category);
+                }
+
                 _unitOfWork.Save();
-                TempData["success"] = "Category edited successfully";
+                TempData["success"] = "Item created successfully";
                 return RedirectToAction("Index");
+
             }
-            return View();
+            else
+            {
+                return View(categoryVM);
+            }
         }
 
+
+        // should seprate into own folder and under api module
+        #region API CALLS
+        [HttpGet]
+        public IActionResult GetAll()
+        {
+            List<Category> objCategoryList = _unitOfWork.Category.GetAll().ToList();
+            return Json(new { data = objCategoryList });
+        }
+
+        [HttpDelete]
         public IActionResult Delete(int? id)
         {
-            if (id == null || id == 0)
+            var categoryToBeDelted = _unitOfWork.Category.Get(u => u.Id == id);
+
+            // guard clause
+            if (categoryToBeDelted == null)
             {
-                return NotFound();
+                return Json(new { success = false, Message = "Eroor while deleting" });
+            }
+            var oldImagePath =
+                Path.Combine(_webHostEnvironment.WebRootPath,
+                categoryToBeDelted.ImageUrl.TrimStart('\\'));
+
+            // delete image from folder
+            if (System.IO.File.Exists(oldImagePath))
+            {
+                System.IO.File.Delete(oldImagePath);
             }
 
-            Category? categoryFromDb = _unitOfWork.Category.Get(u => u.Id == id);
-
-            if (categoryFromDb == null)
-            {
-                return NotFound();
-            }
-            return View(categoryFromDb);
-        }
-
-        [HttpPost, ActionName("Delete")]
-        public IActionResult DeletePOST(int? id)
-        {
-            Category? obj = _unitOfWork.Category.Get(u => u.Id == id);
-            if (obj == null)
-            {
-                return NotFound(id);
-            }
-
-            _unitOfWork.Category.Remove(obj);
+            _unitOfWork.Category.Remove(categoryToBeDelted);
             _unitOfWork.Save();
-            TempData["success"] = "Category deleted successfully";
-            return RedirectToAction("Index");
+            return Json(new { success = true, Message = "Delete Sucessful" });
         }
+        #endregion
     }
 }
